@@ -16,24 +16,21 @@ Ani::Ani(const char* filename)
     char* tex;
     Setting ss;
     HitPoint hitp;
-
     Sequence *sqce;
-    while(!_file.eof())
+
+    while(_file.good())
     {
 	    _file.read((char *)&ftag, 4);
+	    _file.read((char *)&size, 4);
         switch(FTAG(ftag))
         {
         case 'mexa':
-	        _file.read((char *)&size, 4);
             break;
 
         case 'sqcs':
-	        _file.read((char *)&size, 4);
             break;
 
         case 'sqce':
-	        _file.read((char *)&size, 4);
-
             idx = _sequences.size();
             _sequences.reserve(idx+1);
             _sequences.resize(idx+1);
@@ -45,11 +42,9 @@ Ani::Ani(const char* filename)
             break;
 
         case 'htps':
-	        _file.read((char *)&size, 4);
             break;
 
         case 'hitp':
-	        _file.read((char *)&size, 4);
             
 	        _file.read((char *)&hitp.frameId, 4);
 	        _file.read((char *)hitp.wavFile, 256);
@@ -63,22 +58,18 @@ Ani::Ani(const char* filename)
             break;
 
         case 'rlht':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&(sqce->realHitPoint), 4);
             break;
 
         case 'lttk':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&(sqce->hasLightTrack), 4);
             break;
     
         case 'mxse':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&_modelscale, 4);
             break;
 
         case 'sond':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)_soundeffect.filename, 256);
 	        _file.read((char *)&_soundeffect.range, 4);
 	        _file.read((char *)&_soundeffect.loopflag, 4);
@@ -86,18 +77,14 @@ Ani::Ani(const char* filename)
 	        _file.read((char *)&_soundeffect.intensity, 4);
             break;
         case 'bbox':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&_boundingobj.bboxWidth, 4);
 	        _file.read((char *)&_boundingobj.bboxLength, 4);
 	        _file.read((char *)&_boundingobj.bboxHeight, 4);
 	        _file.read((char *)&_boundingobj.bboxLift, 4);
             break;
         case 'arss':
-	        _file.read((char *)&size, 4);
             break;
         case 'arsg':
-	        _file.read((char *)&size, 4);
-
 	        _file.read((char *)ss.name, 256);
 
 	        _file.read((char *)&n, 4);
@@ -121,14 +108,13 @@ Ani::Ani(const char* filename)
             }
             break;
         case 'byrs':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&_bodyradius, sizeof(_bodyradius));
             break;
         case 'cmpt':
-	        _file.read((char *)&size, 4);
 	        _file.read((char *)&_iscomponent, 4);
             break;
         default:
+	        _file.seekg(_file.tellg() - 4);
             break;
         }
     }
@@ -157,7 +143,7 @@ void Ani::info()
     cout << dec << showbase << endl;
 
 
-    for(int i =0; i < _sequences.size(); i++)
+    for(int i = 0; i < _sequences.size(); i++)
     {
         Sequence s = _sequences[i];
         cout << s.animName << " " << s.startFrameId << " " << s.endFrameId << endl;

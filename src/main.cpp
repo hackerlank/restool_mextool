@@ -3,6 +3,7 @@
 #include "util.h"
 #include "pkg.h"
 #include "ani.h"
+#include "mex.h"
 
 using namespace std;
 
@@ -18,7 +19,12 @@ void read_ani(const char *filename)
 {
     Ani ani(filename);
     ani.info();
+}
 
+void read_mex(const char *filename)
+{
+    Mex mex(filename);
+    mex.info();
 }
 
 int main(int argc, char* argv[])
@@ -27,5 +33,6 @@ int main(int argc, char* argv[])
 	//	read_pkg(argv[i]);
 	//read_pkg("../raw/Character.package");
 	read_ani("res/mwandou05.ani");
+	//read_mex("res/mwandou05.mex");
 }
 
