@@ -114,7 +114,7 @@ Ani::Ani(const char* filename)
 	        _file.read((char *)&_iscomponent, 4);
             break;
         default:
-	        _file.seekg(_file.tellg() - 4);
+	        _file.seekg(_file.tellg() - (streamoff)4);
             break;
         }
     }

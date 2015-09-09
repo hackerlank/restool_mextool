@@ -12,6 +12,7 @@ Mex::Mex(const char* filename)
     uint32 size;
     
     int n;
+    char* p;
 
     while(_file.good())
     {
@@ -22,10 +23,17 @@ Mex::Mex(const char* filename)
         case 'vers':
 	        _file.read((char *)&_version, 4);
             break;
-
+        case 'texs':
+	        _file.read((char *)&n, 4);
+            for(int i = 0; i < n; i++)
+            {
+                p = new char[256];
+                _file.read(p, 256);
+                _texs.push_back(p);
+            }
+            break;
         default:
-            _file.seekg(_file.tellg() + size);
-            cout << size << " " << _file.tellg() << endl;
+            _file.seekg(_file.tellg() + (streamoff)size);
             break;
         }
     }
