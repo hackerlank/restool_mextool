@@ -32,7 +32,6 @@ Ani::Ani(const char* filename)
 
         case 'sqce':
             idx = _sequences.size();
-            _sequences.reserve(idx+1);
             _sequences.resize(idx+1);
             sqce = &(_sequences[idx]);
 
@@ -90,7 +89,6 @@ Ani::Ani(const char* filename)
 	        _file.read((char *)&n, 4);
             if(n > 0)
             {
-                ss.subsetFlags.reserve(n);
                 ss.subsetFlags.resize(n);
 	            _file.read((char *)&ss.subsetFlags[0], 4 * n);
             }

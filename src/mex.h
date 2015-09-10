@@ -20,12 +20,14 @@ typedef struct _Face
 
 typedef struct _Geo
 {
-    char name[256];
+    char name[80];
     int vert;
     int face;
     int mtlid;
+    int lightmap;
 
     vector<vec3>           vertList;
+    vector<uint32>         colorList;
     vector<vec3>           normalList;
     vector< vector<vec2> > uvList;
     vector<uint8>          boneList;
