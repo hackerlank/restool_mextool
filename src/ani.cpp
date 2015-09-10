@@ -98,9 +98,8 @@ Ani::Ani(const char* filename)
             {
                 for(int i = 0; i < n; i++)
                 {
-                    //MAX_PATH = 256;
-                    tex = new char[256];
-	                _file.read((char *)tex, 256);
+                    tex = new char[260];
+	                _file.read((char *)tex, 260);
                     ss.replaceTexs.push_back(tex);
                 }
             }

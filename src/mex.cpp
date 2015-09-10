@@ -32,8 +32,8 @@ Mex::Mex(const char* filename)
 	        _file.read((char *)&n, 4);
             for(int i = 0; i < n; i++)
             {
-                p = new char[256];
-                _file.read(p, 256);
+                p = new char[260];
+                _file.read(p, 260);
                 _texs.push_back(p);
             }
             break;
