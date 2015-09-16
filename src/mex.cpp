@@ -1,6 +1,7 @@
 #include "util.h"
 #include "mex.h"
 
+#define stricmp strcasecmp
 
 Mex::Mex(const char* filename)
 {
@@ -16,8 +17,12 @@ Mex::Mex(const char* filename)
     int ni;
     float nf;
     char* p;
+    mat4 mat;
     Mtl* mtl;
     Geo* geo;
+    Bone* bone;
+    Attach ath;
+    KeyFrame frame;
 
     while(_file.good())
     {
@@ -109,6 +114,134 @@ Mex::Mex(const char* filename)
         case 'name':
 	        _file.read((char *)&(geo->name), 80);
             break;
+        case 'sklt':
+	        _file.read((char *)&n, 4);
+	        _file.read((char *)&n, 4);
+            for(int i = 0; i < n; i++)
+            {
+	            _file.read((char *)&ni, 4);
+                _boneRoot.push_back(ni);
+            }
+
+            if(_version >= 108)
+            {
+	            _file.read((char *)&n, 4);
+                if(n == -1)
+                {
+                    _specialModel = 1;
+                }
+                else
+                {
+                    _specialModel = 0;
+                    for(int i = 0; i < n; i++)
+                    {
+	                    _file.read((char *)&ni, 4);
+                        _keyList.push_back(ni);
+                    }
+                }
+	            _file.read((char *)&n, 4);
+                if(n > 0)
+                {
+                    _tcbList.resize(n);
+                    for(int i = 0; i < n; i++)
+                    {
+	                    _file.read((char *)&nf, 4);
+                        nf *= 0.01f;
+                        _tcbList[i].tension = nf;
+                        _file.read((char *)&nf, 4);
+                        nf *= 0.01f;
+                        _tcbList[i].continuity = nf;
+                        _file.read((char *)&nf, 4);
+                        nf *= 0.01f;
+                        _tcbList[i].bias = nf;
+                    }
+                }
+            }
+            break;
+        case 'bone':
+            n = _boneList.size();
+            _boneList.resize(n + 1);
+            bone = &_boneList[n];
+
+            _file.read((char*)&(bone->name), 80);
+            _file.read((char*)&(bone->parent), 4);
+            _file.read((char*)&n, 4);
+            for(int i = 0; i < n; i++)
+            {
+                _file.read((char*)&ni, 4);
+                bone->children.push_back(ni);
+            }
+            break;
+        case 'trck':
+            bone->type = 1;
+            _file.read((char*)&n, 4);
+            for(int i = 0; i < n; i++)
+            {
+                _file.read((char*)&mat, sizeof(mat));
+                bone->frameList.push_back(mat);
+            }
+            break;
+        case 'trk2':
+            _file.read((char*)&n, 4);
+            if(_version < 108 || _specialModel || 
+                (stricmp(bone->name, "Bip01") == 0) ||
+                (stricmp(bone->name, "Bip01 L Thigh") == 0) ||
+                (stricmp(bone->name, "Bip01 L Calf") == 0) ||
+                (stricmp(bone->name, "Bip01 L Foot") == 0) ||
+                (stricmp(bone->name, "Bip01 L Toe0") == 0) ||
+                (stricmp(bone->name, "Bip01 R Thigh") == 0) || 
+                (stricmp(bone->name, "Bip01 R Calf" ) == 0) ||
+                (stricmp(bone->name, "Bip01 R Foot" ) == 0) || 
+                (stricmp(bone->name, "Bip01 R Toe0" ) == 0))
+            {
+                bone->type = 2;
+                bone->transList.resize(n);
+                _file.read((char*)&(bone->transList[0]), sizeof(vec3) * n);
+                bone->rotatList.resize(n);
+                _file.read((char*)&(bone->rotatList[0]), sizeof(quat) * n);
+            }else
+            {
+                bone->type = 3;
+                _file.read((char*)&(bone->initTrans), sizeof(vec3));
+                _file.read((char*)&(bone->initRotat), sizeof(quat));
+                _file.read((char*)&(bone->poseTrans), sizeof(vec3));
+                _file.read((char*)&(bone->poseRotat), sizeof(quat));
+
+                _file.read((char*)&n, 4);//key frame count
+                _file.read((char*)&ni, 4);//tcb
+                bone->isTcb = (ni > 0);
+
+                for(int i = 0; i < n; i++)
+                {
+                    _file.read((char*)&frame.id, 4);
+                    _file.read((char*)&frame.posSpace, 4);
+                    _file.read((char*)&frame.rotSpace, 4);
+                    _file.read((char*)&frame.trans, sizeof(vec3));
+                    _file.read((char*)&frame.rotat, sizeof(quat));
+                    if(bone->isTcb)
+                    {
+                        _file.read((char*)&frame.tcbIndex, 4);
+                    }
+                    bone->keyList.push_back(frame);
+                }
+                if(n > 0)
+                {
+                    _file.read((char*)&n, 4);
+                    for(int i = 0; i < n; i++)
+                    {
+                        _file.read((char*)&ni, 4);
+                        bone->keyIndex.push_back(ni);
+                    }
+                }
+            }
+            break;
+        case 'atts':
+            break;
+        case 'att0':
+	        _file.read((char *)&ath.bone, 4);
+	        _file.read((char *)&ath.name, 80);
+	        _file.read((char *)&ath.mat, sizeof(ath.mat));
+            _attach.push_back(ath);
         default:
             _file.seekg(_file.tellg() + (streamoff)size);
             break;
@@ -132,18 +265,29 @@ void Mex::info()
     cout << "texs    " << dec << showbase << _texs.size() << endl; 
     cout << "mtls    " << dec << showbase << _mtls.size() << endl; 
     cout << "geos    " << dec << showbase << _geos.size() << endl; 
+    cout << "boneRoot   " << dec << showbase << _boneRoot.size() << endl; 
+    cout << "boneList   " << dec << showbase << _boneList.size() << endl; 
+    cout << "tcbList    " << dec << showbase << _tcbList.size() << endl; 
+    cout << "attach  " << dec << showbase << _attach.size() << endl; 
 	cout << "=================================================" << endl;
     cout << dec << showbase << endl;
 
 
     for(int i = 0; i < _texs.size(); i++)
-    {
         cout << "tex " << _texs[i] << endl;
-    }
     for(int i = 0; i < _geos.size(); i++)
     {
-        cout << "geo " << _geos[i].name << endl;
+        Geo g = _geos[i];
+        cout << "geo " << g.name << " vert " << g.vertList.size() << " face " << g.faceList.size() << " bone " << g.boneList.size() << endl;
     }
+    for(int i = 0; i < _boneList.size(); i++)
+    {
+        Bone b = _boneList[i];
+        cout << "bone " << b.name << " type " << (int)b.type << " frame " << b.frameList.size() << " trans " << b.transList.size() 
+            << " roatat " << b.rotatList.size() << " key " << b.keyList.size() << " idx " << b.keyIndex.size() << endl;
+    }
+    for(int i = 0; i < _attach.size(); i++)
+        cout << "attach " << _attach[i].name << endl;
 }
 
 void Mex::save()

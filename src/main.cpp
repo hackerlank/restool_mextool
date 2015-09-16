@@ -29,10 +29,17 @@ void read_mex(const char *filename)
 
 int main(int argc, char* argv[])
 {
-	//for(int i = 1; i < argc; i ++)
-	//	read_pkg(argv[i]);
+	for(int i = 1; i < argc; i ++)
+		read_mex(argv[i]);
+	//read_pkg("../raw/Avatar.package");
 	//read_pkg("../raw/Character.package");
 	//read_ani("res/mwandou05.ani");
-	read_mex("res/mwandou05.mex");
+	//read_mex("res/female.mex");
+    //read_mex("out/data/avatar/aecorativeclothing/femaleaecorativeclothing30522/femaleaecorativeclothing30522.mex");
+
+
+
+    return 0;
 }
+
 

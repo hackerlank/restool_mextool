@@ -34,6 +34,54 @@ typedef struct _Geo
     vector<Face>           faceList;
 } Geo;
 
+typedef struct _Tcb
+{
+    float tension;
+    float continuity;
+    float bias;
+} Tcb;
+
+typedef struct _KeyFrame
+{
+    int id;
+    int posSpace;
+    int rotSpace;
+
+    vec3 trans;
+    quat rotat;
+
+    int tcbIndex;
+} KeyFrame;
+
+typedef struct _Bone
+{
+    char name[80];
+    int id;
+    int parent;
+    vector<int> children;
+
+    uint8 type;
+    vector<mat4> frameList;
+    vector<vec3> transList;
+    vector<quat> rotatList;
+
+    bool isTcb;
+    vec3 initTrans;
+    quat initRotat;
+
+    vec3 poseTrans;
+    quat poseRotat;
+    vector<KeyFrame> keyList;
+    vector<int>      keyIndex;
+} Bone;
+
+typedef struct _Attach
+{
+    char name[80];
+    int  bone;
+    mat4 mat;
+} Attach;
+
 #pragma pack()
 
 
@@ -49,11 +97,21 @@ public:
 	char 	 _path[255];
 	ifstream _file;
 
+    int _specialModel;//特殊坐骑，逐帧动画
 
     int              _version;
     vector<char*>    _texs;
     vector<Mtl>      _mtls;
     vector<Geo>      _geos;
+
+    vector<int>      _boneRoot;
+    vector<Bone>      _boneList;
+
+    vector<Tcb>      _tcbList;
+    vector<int>      _keyList;
+
+    vector<Attach>   _attach;
+
 };
 
 
